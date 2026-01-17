@@ -56,10 +56,19 @@
             background-color: white;
             padding: 40px;
             border-radius: 8px;
-            line-height: 1.8;
-            font-size: 14px;
             box-shadow: 0 2px 4px rgba(0,0,0,0.1);
             overflow-x: auto;
+            overflow-y: auto;
+            width: 100%;
+            min-height: 500px;
+            text-align: center;
+        }
+        .pyramid-inner {
+            transform-origin: top center;
+            line-height: 1.8;
+            font-size: 14px;
+            display: inline-block;
+            text-align: left;
         }
         .row {
             margin-bottom: 5px;
@@ -68,12 +77,13 @@
         }
         .number {
             display: inline-block;
-            min-width: 50px;
+            width: 50px;
             padding: 4px 6px;
             margin: 2px;
             border-radius: 3px;
             transition: opacity 0.3s;
             text-align: center;
+            box-sizing: border-box;
         }
         .number.prime {
             background-color: #ffeb3b;
@@ -109,9 +119,20 @@
                     <button class="divisor-btn active" data-divisor="7">Divisible by 7</button>
                 </div>
             </div>
+            <div class="control-section">
+                <h3>Zoom</h3>
+                <div class="button-group">
+                    <button id="zoomOut">Zoom Out (-)</button>
+                    <button id="zoomReset">Reset (100%)</button>
+                    <button id="zoomIn">Zoom In (+)</button>
+                    <span id="zoomLevel" style="margin-left: 10px; font-weight: bold;">100%</span>
+                </div>
+            </div>
         </div>
-        <div class="pyramid" id="pyramid">
-            <div class="loading">Loading database...</div>
+        <div class="pyramid">
+            <div class="pyramid-inner" id="pyramid">
+                <div class="loading">Loading database...</div>
+            </div>
         </div>
     </div>
 
@@ -119,6 +140,7 @@
         let database = null;
         let showPrimes = true;
         let hiddenDivisors = new Set(); // Divisors that hide their multiples
+        let zoomLevel = 100; // Zoom percentage
 
         // Load the database
         async function loadDatabase() {
@@ -159,6 +181,22 @@
                     updatePyramidVisibility();
                 });
             });
+
+            // Zoom controls
+            document.getElementById('zoomIn').addEventListener('click', function() {
+                zoomLevel = Math.min(200, zoomLevel + 10);
+                updateZoom();
+            });
+
+            document.getElementById('zoomOut').addEventListener('click', function() {
+                zoomLevel = Math.max(20, zoomLevel - 10);
+                updateZoom();
+            });
+
+            document.getElementById('zoomReset').addEventListener('click', function() {
+                zoomLevel = 100;
+                updateZoom();
+            });
         }
 
         function createPyramid() {
@@ -194,6 +232,20 @@
                 pyramid.appendChild(rowDiv);
                 row++;
             }
+            
+            // Center the pyramid after creation
+            setTimeout(centerPyramid, 100);
+        }
+        
+        function centerPyramid() {
+            const pyramidContainer = document.querySelector('.pyramid');
+            const pyramidInner = document.getElementById('pyramid');
+            const containerWidth = pyramidContainer.clientWidth;
+            const contentWidth = pyramidInner.scrollWidth;
+            
+            if (contentWidth > containerWidth) {
+                pyramidContainer.scrollLeft = (contentWidth - containerWidth) / 2;
+            }
         }
 
         function updatePyramidVisibility() {
@@ -222,6 +274,15 @@
                     span.classList.add('hidden');
                 }
             });
+        }
+
+        function updateZoom() {
+            const pyramidInner = document.getElementById('pyramid');
+            pyramidInner.style.transform = `scale(${zoomLevel / 100})`;
+            document.getElementById('zoomLevel').textContent = zoomLevel + '%';
+            
+            // Recenter after zoom
+            setTimeout(centerPyramid, 100);
         }
 
         // Load database on page load

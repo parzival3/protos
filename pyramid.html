@@ -108,17 +108,14 @@
                 <button id="togglePrimes" class="active">Show Primes</button>
             </div>
             <div class="control-section">
-                <h3>Filter by Divisors (1-7)</h3>
+                <h3>Highlight Divisors (Long press to choose color)</h3>
                 <div class="button-group">
-                    <button class="divisor-btn active" data-divisor="1">Divisible by 1</button>
-                    <button class="divisor-btn active" data-divisor="2">Divisible by 2</button>
-                    <button class="divisor-btn active" data-divisor="3">Divisible by 3</button>
-                    <button class="divisor-btn active" data-divisor="4">Divisible by 4</button>
-                    <button class="divisor-btn active" data-divisor="5">Divisible by 5</button>
-                    <button class="divisor-btn active" data-divisor="6">Divisible by 6</button>
-                    <button class="divisor-btn active" data-divisor="7">Divisible by 7</button>
+                    <button class="divisor-btn" data-divisor="3">Divisible by 3</button>
+                    <button class="divisor-btn" data-divisor="5">Divisible by 5</button>
+                    <button class="divisor-btn" data-divisor="7">Divisible by 7</button>
                 </div>
             </div>
+            <input type="color" id="colorPicker" style="display: none;" value="#00ff00">
             <div class="control-section">
                 <h3>Zoom</h3>
                 <div class="button-group">
@@ -139,8 +136,10 @@
     <script>
         let database = null;
         let showPrimes = true;
-        let hiddenDivisors = new Set(); // Divisors that hide their multiples
+        let divisorColors = {}; // Map divisors to their highlight colors
         let zoomLevel = 100; // Zoom percentage
+        let longPressTimer = null;
+        let currentDivisorBtn = null;
 
         // Load the database
         async function loadDatabase() {
@@ -165,21 +164,64 @@
                 updatePyramidVisibility();
             });
 
-            // Divisor buttons
+            // Divisor buttons with long press for color picker
             document.querySelectorAll('.divisor-btn').forEach(btn => {
+                // Click to toggle highlighting
                 btn.addEventListener('click', function() {
                     const divisor = parseInt(this.dataset.divisor);
-                    if (hiddenDivisors.has(divisor)) {
-                        // Currently hidden, show them again
-                        hiddenDivisors.delete(divisor);
-                        this.classList.add('active');
-                    } else {
-                        // Currently shown, hide them
-                        hiddenDivisors.add(divisor);
+                    if (divisorColors[divisor]) {
+                        // Remove highlighting
+                        delete divisorColors[divisor];
                         this.classList.remove('active');
+                        this.style.backgroundColor = '';
+                        this.style.color = '';
+                    } else {
+                        // Add highlighting with default color
+                        divisorColors[divisor] = '#00ff00';
+                        this.classList.add('active');
+                        this.style.backgroundColor = '#00ff00';
+                        this.style.color = '#000';
                     }
                     updatePyramidVisibility();
                 });
+                
+                // Long press to choose color
+                btn.addEventListener('mousedown', function(e) {
+                    currentDivisorBtn = this;
+                    longPressTimer = setTimeout(() => {
+                        const divisor = parseInt(this.dataset.divisor);
+                        const colorPicker = document.getElementById('colorPicker');
+                        colorPicker.value = divisorColors[divisor] || '#00ff00';
+                        colorPicker.click();
+                    }, 500); // 500ms for long press
+                });
+                
+                btn.addEventListener('mouseup', function() {
+                    if (longPressTimer) {
+                        clearTimeout(longPressTimer);
+                        longPressTimer = null;
+                    }
+                });
+                
+                btn.addEventListener('mouseleave', function() {
+                    if (longPressTimer) {
+                        clearTimeout(longPressTimer);
+                        longPressTimer = null;
+                    }
+                });
+            });
+            
+            // Color picker change handler
+            document.getElementById('colorPicker').addEventListener('change', function() {
+                if (currentDivisorBtn) {
+                    const divisor = parseInt(currentDivisorBtn.dataset.divisor);
+                    const color = this.value;
+                    divisorColors[divisor] = color;
+                    currentDivisorBtn.classList.add('active');
+                    currentDivisorBtn.style.backgroundColor = color;
+                    currentDivisorBtn.style.color = '#fff';
+                    updatePyramidVisibility();
+                }
             });
 
             // Zoom controls
@@ -253,24 +295,26 @@
                 const num = parseInt(span.dataset.number);
                 const numData = database[num];
                 
-                let shouldShow = true;
+                // Reset background color and visibility
+                span.style.backgroundColor = '';
+                span.classList.remove('hidden');
                 
-                // Check if the number is divisible by any hidden divisor
-                for (let divisor of hiddenDivisors) {
+                // Apply divisor colors (last one wins if multiple match)
+                for (let divisor in divisorColors) {
                     if (num % divisor === 0) {
-                        shouldShow = false;
-                        break;
+                        span.style.backgroundColor = divisorColors[divisor];
                     }
+                }
+                
+                // Restore prime highlighting if enabled and no divisor color applied
+                if (numData.is_prime && !span.style.backgroundColor) {
+                    span.classList.add('prime');
+                } else if (!numData.is_prime || span.style.backgroundColor) {
+                    span.classList.remove('prime');
                 }
                 
                 // If it's prime and we're hiding primes, hide it
                 if (numData.is_prime && !showPrimes) {
-                    shouldShow = false;
-                }
-                
-                if (shouldShow) {
-                    span.classList.remove('hidden');
-                } else {
                     span.classList.add('hidden');
                 }
             });

@@ -1,12 +1,12 @@
 import json
 
 def find_divisors(n):
-    """Find all divisors of a number."""
+    """Find all divisors of a number (excluding 1 and the number itself)."""
     divisors = []
-    for i in range(1, int(n**0.5) + 1):
+    for i in range(2, int(n**0.5) + 1):
         if n % i == 0:
             divisors.append(i)
-            if i != n // i:
+            if i != n // i and n // i != n:
                 divisors.append(n // i)
     return sorted(divisors)
 

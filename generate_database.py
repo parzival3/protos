@@ -45,7 +45,7 @@ def generate_database(max_number):
     return database
 
 # Generate database
-max_num = 10000
+max_num = 100000
 db = generate_database(max_num)
 
 # Save to JSON file

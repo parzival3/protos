@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Number Pyramid</title>
+    <style>
+        body {
+            font-family: 'Courier New', monospace;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            background-color: #f0f0f0;
+        }
+        .pyramid {
+            text-align: center;
+            line-height: 2;
+            font-size: 20px;
+        }
+        .row {
+            white-space: pre;
+        }
+    </style>
+</head>
+<body>
+    <div class="pyramid" id="pyramid"></div>
+
+    <script>
+        function createPyramid() {
+            const pyramid = document.getElementById('pyramid');
+            let number = 1;
+            let row = 1;
+
+            while (row <= 3) {
+                let rowDiv = document.createElement('div');
+                rowDiv.className = 'row';
+
+                let spaces = ' '.repeat((3 - row) * 2);
+                let numbers = [];
+
+                for (let i = 0; i < 2 * row - 1; i++) {
+                    numbers.push(number++);
+                }
+
+                rowDiv.textContent = spaces + numbers.join(' ');
+                pyramid.appendChild(rowDiv);
+                row++;
+            }
+        }
+
+        createPyramid();
+    </script>
+</body>
+</html>

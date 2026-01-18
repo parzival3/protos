@@ -1,4 +1,5 @@
 import json
+from datetime import datetime
 
 def find_divisors(n):
     """Find all divisors of a number (excluding 1 and the number itself)."""
@@ -25,15 +26,33 @@ def is_prime(n):
 
 def generate_database(max_number):
     """Generate database of numbers with their divisors and prime status."""
-    database = {}
+    database = {
+        "_metadata": {
+            "max_number": max_number,
+            "total_count": max_number,
+            "generated_date": None,  # Will be set when saving
+            "perfect_squares": []  # Will be populated
+        }
+    }
     
     print(f"Generating database for numbers 1 to {max_number}...")
+    
+    prime_count = 0
+    perfect_squares = []
+    
+    # Calculate all perfect squares up to max_number
+    i = 1
+    while i * i <= max_number:
+        perfect_squares.append(i * i)
+        i += 1
     
     for num in range(1, max_number + 1):
         divisors = find_divisors(num)
         prime = is_prime(num)
+        if prime:
+            prime_count += 1
         
-        database[num] = {
+        database[str(num)] = {
             "divisors": divisors,
             "is_prime": prime,
             "divisor_count": len(divisors)
@@ -42,11 +61,17 @@ def generate_database(max_number):
         if num % 1000 == 0:
             print(f"Processed {num} numbers...")
     
+    database["_metadata"]["prime_count"] = prime_count
+    database["_metadata"]["perfect_squares"] = perfect_squares
+    
     return database
 
 # Generate database
 max_num = 100000
 db = generate_database(max_num)
+
+# Add timestamp
+db["_metadata"]["generated_date"] = datetime.now().isoformat()
 
 # Save to JSON file
 output_file = "numbers_database.json"
@@ -55,5 +80,6 @@ with open(output_file, 'w') as f:
 
 print(f"\nDatabase created successfully!")
 print(f"File: {output_file}")
-print(f"Total numbers: {len(db)}")
-print(f"Prime numbers: {sum(1 for data in db.values() if data['is_prime'])}")
+print(f"Total numbers: {db['_metadata']['total_count']}")
+print(f"Prime numbers: {db['_metadata']['prime_count']}")
+print(f"Perfect squares: {len(db['_metadata']['perfect_squares'])}")

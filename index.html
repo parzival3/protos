@@ -3,23 +3,53 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
     <title>Όρος Πρώτος</title>
     <style>
+        :root {
+            --bg-primary: #f0f0f0;
+            --bg-secondary: white;
+            --text-primary: #333;
+            --text-secondary: #666;
+            --border-color: #333;
+            --shadow: rgba(0,0,0,0.1);
+            --prime-bg: #ffeb3b;
+            --tooltip-bg: #333;
+            --tooltip-text: white;
+        }
+        
+        body.dark-theme {
+            --bg-primary: #1a1a1a;
+            --bg-secondary: #2d2d2d;
+            --text-primary: #e0e0e0;
+            --text-secondary: #999;
+            --border-color: #555;
+            --shadow: rgba(0,0,0,0.3);
+            --prime-bg: #ffd700;
+            --tooltip-bg: #444;
+            --tooltip-text: #e0e0e0;
+        }
+        
         body {
             font-family: 'Courier New', monospace;
             margin: 0;
             padding: 20px;
-            background-color: #f0f0f0;
+            background-color: var(--bg-primary);
+            color: var(--text-primary);
+            transition: background-color 0.3s, color 0.3s;
         }
         .container {
             margin: 0 auto;
         }
         .controls {
-            background-color: white;
+            background-color: var(--bg-secondary);
             padding: 20px;
             border-radius: 8px;
             margin-bottom: 20px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            box-shadow: 0 2px 4px var(--shadow);
+            transition: background-color 0.3s, box-shadow 0.3s;
         }
         .control-section {
             margin-bottom: 15px;
@@ -27,7 +57,7 @@
         .control-section h3 {
             margin: 0 0 10px 0;
             font-size: 16px;
-            color: #333;
+            color: var(--text-primary);
         }
         .button-group {
             display: flex;
@@ -36,13 +66,24 @@
         }
         button {
             padding: 8px 16px;
-            border: 2px solid #333;
-            background-color: white;
+            border: 2px solid var(--border-color);
+            background-color: var(--bg-secondary);
+            color: var(--text-primary);
             cursor: pointer;
             border-radius: 4px;
             font-family: 'Courier New', monospace;
             font-size: 14px;
             transition: all 0.2s;
+        }
+        button.active {
+            background-color: var(--text-primary);
+            color: var(--bg-secondary);
+        }
+        button:hover {
+            background-color: var(--text-secondary);
+            color: var(--bg-secondary);
+        }
+            min-width: auto;
         }
         button.active {
             background-color: #333;
@@ -53,15 +94,16 @@
             color: white;
         }
         .pyramid {
-            background-color: white;
+            background-color: var(--bg-secondary);
             padding: 40px;
             border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            box-shadow: 0 2px 4px var(--shadow);
             overflow-x: auto;
             overflow-y: auto;
             width: 100%;
             min-height: 500px;
             text-align: center;
+            transition: background-color 0.3s, box-shadow 0.3s;
         }
         .pyramid-inner {
             transform-origin: top center;
@@ -92,9 +134,10 @@
             position: absolute;
             bottom: 100%;
             left: 50%;
-            transform: translateX(-50%);
-            background-color: #333;
-            color: white;
+            transform: translateX(-50%) scale(var(--inverse-zoom, 1));
+            transform-origin: center bottom;
+            background-color: var(--tooltip-bg);
+            color: var(--tooltip-text);
             padding: 8px 12px;
             border-radius: 4px;
             white-space: nowrap;
@@ -108,15 +151,20 @@
             position: absolute;
             bottom: 100%;
             left: 50%;
-            transform: translateX(-50%);
+            transform: translateX(-50%) scale(var(--inverse-zoom, 1));
+            transform-origin: center bottom;
             border: 5px solid transparent;
-            border-top-color: #333;
+            border-top-color: var(--tooltip-bg);
             margin-bottom: -5px;
             pointer-events: none;
         }
+        .number {
+            color: var(--text-primary);
+        }
         .number.prime {
-            background-color: #ffeb3b;
+            background-color: var(--prime-bg);
             font-weight: bold;
+            color: #000;
         }
         .number.hidden {
             opacity: 0.1;
@@ -131,16 +179,17 @@
             position: fixed;
             bottom: 20px;
             right: 20px;
-            background-color: white;
+            background-color: var(--bg-secondary);
             padding: 15px;
             border-radius: 8px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            box-shadow: 0 4px 12px var(--shadow);
             z-index: 1001;
+            transition: background-color 0.3s, box-shadow 0.3s;
         }
         .floating-zoom h4 {
             margin: 0 0 10px 0;
             font-size: 14px;
-            color: #333;
+            color: var(--text-primary);
         }
         .floating-zoom .button-group {
             display: flex;
@@ -153,12 +202,34 @@
     <div class="container">
         <div class="controls">
             <div class="control-section">
+                <h3>Theme</h3>
+                <button id="toggleTheme">🌙 Dark Mode</button>
+            </div>
+            <div class="control-section">
                 <h3>Prime Numbers</h3>
                 <button id="togglePrimes" class="active">Show Primes</button>
             </div>
             <div class="control-section">
+                <h3>Number Range</h3>
+                <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+                    <label style="display: flex; align-items: center; gap: 5px;">
+                        <span>Show up to (perfect square):</span>
+                        <select id="maxNumbers" style="width: 120px; padding: 6px; border: 2px solid var(--border-color); background-color: var(--bg-secondary); color: var(--text-primary); border-radius: 4px; font-family: 'Courier New', monospace; font-size: 14px;">
+                            <option value="961">961 (31²)</option>
+                        </select>
+                    </label>
+                    <button id="applyRange">Apply</button>
+                    <span id="rangeStatus" style="color: var(--text-secondary); font-size: 12px;"></span>
+                </div>
+            </div>
+            <div class="control-section">
                 <h3>Highlight Divisors (Click to choose color)</h3>
                 <div class="button-group" style="flex-direction: column; gap: 5px;">
+                    <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px;">
+                        <input type="number" id="customDivisor" min="2" placeholder="Custom divisor" style="width: 100px; padding: 6px; border: 2px solid #333; border-radius: 4px; font-family: 'Courier New', monospace;">
+                        <button id="addCustomDivisor">Add Divisor</button>
+                    </div>
+                    <div id="divisorButtons" style="display: flex; flex-direction: column; gap: 5px;">
                     <div style="display: flex; align-items: center; gap: 10px;">
                         <button class="divisor-btn" data-divisor="2">Divisible by 2</button>
                         <label style="display: flex; align-items: center; gap: 5px;">
@@ -215,6 +286,7 @@
                             <span>Hide</span>
                         </label>
                     </div>
+                    </div>
                 </div>
             </div>
             <input type="color" id="colorPicker" style="display: none;" value="#00ff00">
@@ -254,14 +326,236 @@
         let zoomLevel = 100; // Zoom percentage
         let longPressTimer = null;
         let currentDivisorBtn = null;
+        let maxNumbers = 961; // Maximum numbers to display (default: 31²)
+        let MAX_DB_SIZE = 100000; // Maximum size in database (will be read from metadata)
+        let customDivisors = []; // Array of custom divisor numbers
+        const defaultDivisors = [2, 3, 5, 7, 11, 13, 17, 21]; // Default divisor buttons
+        let darkTheme = false; // Theme preference
+        let perfectSquares = []; // Perfect square numbers from database
+
+        // Load saved state from localStorage
+        function loadState() {
+            const savedState = localStorage.getItem('pyramidState');
+            if (savedState) {
+                try {
+                    const state = JSON.parse(savedState);
+                    showPrimes = state.showPrimes !== undefined ? state.showPrimes : true;
+                    divisorColors = state.divisorColors || {};
+                    hiddenDivisors = new Set(state.hiddenDivisors || []);
+                    zoomLevel = state.zoomLevel || 100;
+                    maxNumbers = state.maxNumbers !== undefined ? state.maxNumbers : 961;
+                    customDivisors = state.customDivisors || [];
+                    darkTheme = state.darkTheme || false;
+                } catch (e) {
+                    console.error('Error loading state:', e);
+                }
+            }
+        }
+
+        // Save state to localStorage
+        function saveState() {
+            const state = {
+                showPrimes: showPrimes,
+                divisorColors: divisorColors,
+                hiddenDivisors: Array.from(hiddenDivisors),
+                zoomLevel: zoomLevel,
+                maxNumbers: maxNumbers,
+                customDivisors: customDivisors,
+                darkTheme: darkTheme
+            };
+            localStorage.setItem('pyramidState', JSON.stringify(state));
+        }
+
+        // Create a divisor button element
+        function createDivisorButton(divisor, isCustom = false) {
+            const container = document.createElement('div');
+            container.style.cssText = 'display: flex; align-items: center; gap: 10px;';
+            container.dataset.divisor = divisor;
+            
+            const btn = document.createElement('button');
+            btn.className = 'divisor-btn';
+            btn.dataset.divisor = divisor;
+            btn.textContent = `Divisible by ${divisor}`;
+            
+            // Apply saved color if exists
+            if (divisorColors[divisor]) {
+                btn.classList.add('active');
+                btn.style.backgroundColor = divisorColors[divisor];
+                btn.style.color = '#fff';
+            }
+            
+            // Add click handler
+            btn.addEventListener('click', function() {
+                const div = parseInt(this.dataset.divisor);
+                currentDivisorBtn = this;
+                
+                if (divisorColors[div]) {
+                    // Already selected - deselect it
+                    delete divisorColors[div];
+                    this.classList.remove('active');
+                    this.style.backgroundColor = '';
+                    this.style.color = '';
+                    updatePyramidVisibility();
+                    saveState();
+                } else {
+                    // Not selected - open color picker
+                    const colorPicker = document.getElementById('colorPicker');
+                    colorPicker.value = '#00ff00';
+                    colorPicker.click();
+                }
+            });
+            
+            container.appendChild(btn);
+            
+            // Add hide checkbox
+            const label = document.createElement('label');
+            label.style.cssText = 'display: flex; align-items: center; gap: 5px;';
+            
+            const checkbox = document.createElement('input');
+            checkbox.type = 'checkbox';
+            checkbox.className = 'hide-checkbox';
+            checkbox.dataset.divisor = divisor;
+            checkbox.checked = hiddenDivisors.has(divisor);
+            
+            checkbox.addEventListener('change', function() {
+                const div = parseInt(this.dataset.divisor);
+                if (this.checked) {
+                    hiddenDivisors.add(div);
+                } else {
+                    hiddenDivisors.delete(div);
+                }
+                updatePyramidVisibility();
+                saveState();
+            });
+            
+            label.appendChild(checkbox);
+            label.appendChild(document.createElement('span')).textContent = 'Hide';
+            container.appendChild(label);
+            
+            // Add remove button for custom divisors
+            if (isCustom) {
+                const removeBtn = document.createElement('button');
+                removeBtn.className = 'remove-btn';
+                removeBtn.textContent = 'Remove';
+                removeBtn.addEventListener('click', function() {
+                    removeCustomDivisor(divisor);
+                });
+                container.appendChild(removeBtn);
+            }
+            
+            return container;
+        }
+
+        // Add a custom divisor
+        function addCustomDivisor(divisor) {
+            if (divisor < 2) {
+                alert('Divisor must be at least 2');
+                return;
+            }
+            
+            // Check if already exists (in default or custom)
+            if (defaultDivisors.includes(divisor) || customDivisors.includes(divisor)) {
+                alert(`Divisor ${divisor} already exists`);
+                return;
+            }
+            
+            customDivisors.push(divisor);
+            customDivisors.sort((a, b) => a - b);
+            
+            const buttonsContainer = document.getElementById('divisorButtons');
+            const newButton = createDivisorButton(divisor, true);
+            buttonsContainer.appendChild(newButton);
+            
+            // Equalize button widths after adding
+            setTimeout(() => equalizeButtonWidths(), 0);
+            
+            saveState();
+        }
+
+        // Remove a custom divisor
+        function removeCustomDivisor(divisor) {
+            customDivisors = customDivisors.filter(d => d !== divisor);
+            
+            // Remove from colors and hidden if present
+            delete divisorColors[divisor];
+            hiddenDivisors.delete(divisor);
+            
+            // Remove the button from DOM
+            const container = document.querySelector(`[data-divisor="${divisor}"]`);
+            if (container) {
+                container.remove();
+            }
+            
+            equalizeButtonWidths();
+            updatePyramidVisibility();
+            saveState();
+        }
+
+        // Equalize all divisor button widths to match the widest one
+        function equalizeButtonWidths() {
+            const buttons = document.querySelectorAll('.divisor-btn');
+            if (buttons.length === 0) return;
+            
+            // Reset widths to measure natural width
+            buttons.forEach(btn => btn.style.width = 'auto');
+            
+            // Find the maximum width
+            let maxWidth = 0;
+            buttons.forEach(btn => {
+                const width = btn.offsetWidth;
+                if (width > maxWidth) {
+                    maxWidth = width;
+                }
+            });
+            
+            // Apply the maximum width to all buttons
+            buttons.forEach(btn => {
+                btn.style.width = maxWidth + 'px';
+            });
+        }
 
         // Load the database
         async function loadDatabase() {
+            loadState(); // Load saved state first
             try {
                 const response = await fetch('numbers_database.json');
-                database = await response.json();
+                const data = await response.json();
+                
+                // Extract metadata if it exists
+                if (data._metadata) {
+                    MAX_DB_SIZE = data._metadata.max_number || data._metadata.total_count;
+                    perfectSquares = data._metadata.perfect_squares || [];
+                    console.log(`Database loaded: ${MAX_DB_SIZE.toLocaleString()} numbers, ${data._metadata.prime_count?.toLocaleString() || 'unknown'} primes, ${perfectSquares.length} perfect squares`);
+                    
+                    // Remove metadata from database object for easier iteration
+                    database = {...data};
+                    delete database._metadata;
+                } else {
+                    database = data;
+                    // Fallback: calculate MAX_DB_SIZE from keys and perfect squares
+                    const keys = Object.keys(database).map(k => parseInt(k)).filter(k => !isNaN(k));
+                    MAX_DB_SIZE = Math.max(...keys);
+                    // Generate perfect squares as fallback
+                    perfectSquares = [];
+                    let i = 1;
+                    while (i * i <= MAX_DB_SIZE) {
+                        perfectSquares.push(i * i);
+                        i++;
+                    }
+                }
+                
+                // Populate perfect squares dropdown
+                populatePerfectSquaresDropdown();
+                
+                // Adjust maxNumbers if it exceeds database size or not a perfect square
+                if (maxNumbers > MAX_DB_SIZE || !perfectSquares.includes(maxNumbers)) {
+                    // Find closest perfect square to 961
+                    maxNumbers = perfectSquares.find(sq => sq >= 961) || perfectSquares[perfectSquares.length - 1];
+                }
+                
                 createPyramid();
                 setupControls();
+                restoreUIState(); // Restore UI after controls are set up
             } catch (error) {
                 document.getElementById('pyramid').innerHTML = 
                     '<div class="loading">Error loading database. Make sure numbers_database.json is in the same directory.</div>';
@@ -269,13 +563,155 @@
             }
         }
 
+        // Populate the perfect squares dropdown
+        function populatePerfectSquaresDropdown() {
+            const select = document.getElementById('maxNumbers');
+            select.innerHTML = ''; // Clear existing options
+            
+            perfectSquares.forEach(square => {
+                const option = document.createElement('option');
+                option.value = square;
+                
+                // Calculate which perfect square it is
+                const root = Math.sqrt(square);
+                option.textContent = `${square.toLocaleString()} (${root}²)`;
+                
+                select.appendChild(option);
+            });
+        }
+
+        // Restore UI elements to match loaded state
+        function restoreUIState() {
+            // Restore theme
+            if (darkTheme) {
+                document.body.classList.add('dark-theme');
+                document.getElementById('toggleTheme').textContent = '☀️ Light Mode';
+            } else {
+                document.body.classList.remove('dark-theme');
+                document.getElementById('toggleTheme').textContent = '🌙 Dark Mode';
+            }
+
+            // Restore prime toggle button
+            const primeBtn = document.getElementById('togglePrimes');
+            if (!showPrimes) {
+                primeBtn.classList.remove('active');
+                primeBtn.textContent = 'Hide Primes';
+            }
+
+            // Restore number range select
+            const maxSelect = document.getElementById('maxNumbers');
+            maxSelect.value = maxNumbers;
+
+            // Restore custom divisors
+            const buttonsContainer = document.getElementById('divisorButtons');
+            customDivisors.forEach(divisor => {
+                const customButton = createDivisorButton(divisor, true);
+                buttonsContainer.appendChild(customButton);
+            });
+
+            // Restore divisor button colors
+            document.querySelectorAll('.divisor-btn').forEach(btn => {
+                const divisor = parseInt(btn.dataset.divisor);
+                if (divisorColors[divisor]) {
+                    btn.classList.add('active');
+                    btn.style.backgroundColor = divisorColors[divisor];
+                    btn.style.color = '#fff';
+                }
+            });
+
+            // Restore hide checkboxes
+            document.querySelectorAll('.hide-checkbox').forEach(checkbox => {
+                const divisor = parseInt(checkbox.dataset.divisor);
+                if (hiddenDivisors.has(divisor)) {
+                    checkbox.checked = true;
+                }
+            });
+
+            // Restore zoom
+            updateZoom();
+            
+            // Equalize button widths after all buttons are restored
+            setTimeout(() => equalizeButtonWidths(), 0);
+            
+            // Update visibility based on loaded state
+            updatePyramidVisibility();
+        }
+
+        // Toggle theme
+        function toggleThemeMode() {
+            darkTheme = !darkTheme;
+            if (darkTheme) {
+                document.body.classList.add('dark-theme');
+                document.getElementById('toggleTheme').textContent = '☀️ Light Mode';
+            } else {
+                document.body.classList.remove('dark-theme');
+                document.getElementById('toggleTheme').textContent = '🌙 Dark Mode';
+            }
+            saveState();
+        }
+
         function setupControls() {
+            // Theme toggle
+            document.getElementById('toggleTheme').addEventListener('click', toggleThemeMode);
+
+            // Custom divisor button
+            document.getElementById('addCustomDivisor').addEventListener('click', function() {
+                const input = document.getElementById('customDivisor');
+                const value = parseInt(input.value);
+                if (!isNaN(value)) {
+                    addCustomDivisor(value);
+                    input.value = '';
+                }
+            });
+            
+            // Allow Enter key to add custom divisor
+            document.getElementById('customDivisor').addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    document.getElementById('addCustomDivisor').click();
+                }
+            });
+
             // Prime toggle
             document.getElementById('togglePrimes').addEventListener('click', function() {
                 showPrimes = !showPrimes;
                 this.classList.toggle('active');
                 this.textContent = showPrimes ? 'Show Primes' : 'Hide Primes';
                 updatePyramidVisibility();
+                saveState();
+            });
+
+            // Number range control
+            document.getElementById('applyRange').addEventListener('click', function() {
+                const select = document.getElementById('maxNumbers');
+                const value = parseInt(select.value);
+                
+                if (!perfectSquares.includes(value)) {
+                    document.getElementById('rangeStatus').textContent = 'Please select a perfect square';
+                    document.getElementById('rangeStatus').style.color = '#d32f2f';
+                    return;
+                }
+                
+                maxNumbers = value;
+                document.getElementById('rangeStatus').textContent = 'Rebuilding pyramid...';
+                document.getElementById('rangeStatus').style.color = 'var(--text-secondary)';
+                
+                // Rebuild the pyramid
+                createPyramid();
+                updatePyramidVisibility();
+                saveState();
+                
+                const root = Math.sqrt(maxNumbers);
+                document.getElementById('rangeStatus').textContent = `Showing ${maxNumbers.toLocaleString()} numbers (${root}² rows)`;
+                document.getElementById('rangeStatus').style.color = '#4caf50';
+                
+                setTimeout(() => {
+                    document.getElementById('rangeStatus').textContent = '';
+                }, 3000);
+            });
+            
+            // Auto-apply when selection changes
+            document.getElementById('maxNumbers').addEventListener('change', function() {
+                document.getElementById('applyRange').click();
             });
 
             // Divisor buttons - click to choose color or deselect
@@ -291,6 +727,7 @@
                         this.style.backgroundColor = '';
                         this.style.color = '';
                         updatePyramidVisibility();
+                        saveState();
                     } else {
                         // Not selected - open color picker
                         const colorPicker = document.getElementById('colorPicker');
@@ -310,6 +747,7 @@
                     currentDivisorBtn.style.backgroundColor = color;
                     currentDivisorBtn.style.color = '#fff';
                     updatePyramidVisibility();
+                    saveState();
                 }
             });
             
@@ -323,6 +761,7 @@
                         hiddenDivisors.delete(divisor);
                     }
                     updatePyramidVisibility();
+                    saveState();
                 });
             });
 
@@ -330,32 +769,38 @@
             document.getElementById('zoomIn').addEventListener('click', function() {
                 zoomLevel = Math.min(200, zoomLevel + 10);
                 updateZoom();
+                saveState();
             });
 
             document.getElementById('zoomOut').addEventListener('click', function() {
                 zoomLevel = Math.max(20, zoomLevel - 10);
                 updateZoom();
+                saveState();
             });
 
             document.getElementById('zoomReset').addEventListener('click', function() {
                 zoomLevel = 100;
                 updateZoom();
+                saveState();
             });
             
             // Floating zoom controls (bottom right)
             document.getElementById('zoomInFloat').addEventListener('click', function() {
                 zoomLevel = Math.min(200, zoomLevel + 10);
                 updateZoom();
+                saveState();
             });
 
             document.getElementById('zoomOutFloat').addEventListener('click', function() {
                 zoomLevel = Math.max(20, zoomLevel - 10);
                 updateZoom();
+                saveState();
             });
 
             document.getElementById('zoomResetFloat').addEventListener('click', function() {
                 zoomLevel = 100;
                 updateZoom();
+                saveState();
             });
         }
 
@@ -365,7 +810,7 @@
             
             let number = 1;
             let row = 1;
-            const totalNumbers = 100000;
+            const totalNumbers = Math.min(maxNumbers, MAX_DB_SIZE);
             
             // Keep adding rows until we've displayed all numbers
             while (number <= totalNumbers) {
@@ -383,9 +828,14 @@
                     
                     // Add tooltip with divisors
                     if (numData) {
-                        const divisorsList = numData.divisors.join(', ');
-                        const primeLabel = numData.is_prime ? ' (Prime)' : '';
-                        span.dataset.tooltip = `Divisors: ${divisorsList}${primeLabel}`;
+                        if (numData.is_prime) {
+                            span.dataset.tooltip = `${number} (Prime)`;
+                        } else if (numData.divisors.length > 0) {
+                            const divisorsList = numData.divisors.join(', ');
+                            span.dataset.tooltip = `${number}: ${divisorsList}`;
+                        } else {
+                            span.dataset.tooltip = `${number}`;
+                        }
                     }
                     
                     if (numData && numData.is_prime) {
@@ -463,7 +913,11 @@
 
         function updateZoom() {
             const pyramidInner = document.getElementById('pyramid');
-            pyramidInner.style.transform = `scale(${zoomLevel / 100})`;
+            const scale = zoomLevel / 100;
+            pyramidInner.style.transform = `scale(${scale})`;
+            
+            // Set CSS variable for inverse zoom (to keep tooltips same size)
+            pyramidInner.style.setProperty('--inverse-zoom', 1 / scale);
             
             // Update both zoom level displays
             document.getElementById('zoomLevel').textContent = zoomLevel + '%';
